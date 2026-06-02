@@ -30,6 +30,7 @@ async function fetchData() {
         return currentData;
     } catch (error) {
         console.error('Fetch error:', error);
+        showMessage('submitMessage', 'Error connecting to database. Check your API keys.', 'error');
         return { rats: [], hunters: [] };
     }
 }
@@ -62,7 +63,6 @@ function renderRats() {
         return;
     }
     
-    // Sort by score (most wanted first)
     const sorted = [...currentData.rats].sort((a, b) => (b.score || 0) - (a.score || 0));
     
     container.innerHTML = sorted.map(rat => `
@@ -78,7 +78,6 @@ function renderRats() {
         </div>
     `).join('');
     
-    // Attach vote events
     document.querySelectorAll('.vote-btn.up').forEach(btn => {
         btn.addEventListener('click', () => vote(btn.dataset.id, 1));
     });
@@ -87,7 +86,6 @@ function renderRats() {
     });
 }
 
-// Handle voting
 async function vote(ratId, delta) {
     const rat = currentData.rats.find(r => r.id === ratId);
     if (rat) {
@@ -97,7 +95,6 @@ async function vote(ratId, delta) {
     }
 }
 
-// Render hunters list
 function renderHunters() {
     const container = document.getElementById('huntersList');
     if (!container) return;
@@ -115,70 +112,102 @@ function renderHunters() {
     `).join('');
 }
 
-// Submit a new Rat
-document.getElementById('submitRatForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('ratName').value.trim();
-    const evidence = document.getElementById('ratEvidence').value.trim();
-    const reporter = document.getElementById('reporterName').value.trim() || 'Anonymous';
-    
-    if (!name || !evidence) {
-        showMessage('submitMessage', 'Please fill in all required fields', 'error');
-        return;
-    }
-    
-    const newRat = {
-        id: Date.now().toString(),
-        name: name,
-        evidence: evidence,
-        reporter: reporter,
-        score: 0,
-        date: new Date().toISOString()
-    };
-    
-    currentData.rats.push(newRat);
-    await saveData();
-    showMessage('submitMessage', 'Rat added to Most Wanted board!', 'success');
-    document.getElementById('submitRatForm').reset();
-    renderRats();
-});
+// ============================================
+// SUBMIT RAT FORM - FIXED VERSION
+// ============================================
+const submitForm = document.getElementById('submitRatForm');
+if (submitForm) {
+    submitForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        console.log("Form submitted!"); // Debug line
+        
+        const name = document.getElementById('ratName').value.trim();
+        const evidence = document.getElementById('ratEvidence').value.trim();
+        const reporter = document.getElementById('reporterName').value.trim();
+        
+        console.log("Name:", name, "Evidence:", evidence); // Debug line
+        
+        // Check required fields
+        if (!name) {
+            showMessage('submitMessage', '❌ Please enter the Rat\'s username', 'error');
+            return;
+        }
+        
+        if (!evidence) {
+            showMessage('submitMessage', '❌ Please provide evidence (description or screenshot link)', 'error');
+            return;
+        }
+        
+        // Create new Rat entry
+        const newRat = {
+            id: Date.now().toString(),
+            name: name,
+            evidence: evidence,
+            reporter: reporter || 'Anonymous',
+            score: 0,
+            date: new Date().toISOString()
+        };
+        
+        currentData.rats.push(newRat);
+        const saved = await saveData();
+        
+        if (saved) {
+            showMessage('submitMessage', '✅ Rat added to Most Wanted board!', 'success');
+            document.getElementById('submitRatForm').reset();
+            renderRats();
+        } else {
+            showMessage('submitMessage', '❌ Failed to save. Check your JSONBin settings.', 'error');
+        }
+    });
+}
 
-// Join Guild
-document.getElementById('joinForm')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('hunterName').value.trim();
-    const platform = document.getElementById('platform').value.trim();
-    
-    if (!name) {
-        showMessage('joinMessage', 'Please enter your hunter name', 'error');
-        return;
-    }
-    
-    const newHunter = {
-        id: Date.now().toString(),
-        name: name,
-        platform: platform || 'Not specified'
-    };
-    
-    currentData.hunters.push(newHunter);
-    await saveData();
-    showMessage('joinMessage', `Welcome to The Cleanup Crew, ${name}!`, 'success');
-    document.getElementById('joinForm').reset();
-    renderHunters();
-});
+// ============================================
+// JOIN GUILD FORM
+// ============================================
+const joinForm = document.getElementById('joinForm');
+if (joinForm) {
+    joinForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('hunterName').value.trim();
+        const platform = document.getElementById('platform').value.trim();
+        
+        if (!name) {
+            showMessage('joinMessage', '❌ Please enter your hunter name', 'error');
+            return;
+        }
+        
+        const newHunter = {
+            id: Date.now().toString(),
+            name: name,
+            platform: platform || 'Not specified'
+        };
+        
+        currentData.hunters.push(newHunter);
+        await saveData();
+        showMessage('joinMessage', `✅ Welcome to The Cleanup Crew, ${name}!`, 'success');
+        document.getElementById('joinForm').reset();
+        renderHunters();
+    });
+}
 
-// Admin login
-document.getElementById('adminLoginBtn')?.addEventListener('click', () => {
-    const password = document.getElementById('adminPassword').value;
-    if (password === ADMIN_PASSWORD) {
-        adminLoggedIn = true;
-        document.getElementById('adminPanel').style.display = 'block';
-        populateDeleteSelect();
-        showMessage('adminMessage', 'Admin access granted', 'success');
-    } else {
-        showMessage('adminMessage', 'Wrong password', 'error');
-    }
-});
+// ============================================
+// ADMIN PANEL
+// ============================================
+const adminLoginBtn = document.getElementById('adminLoginBtn');
+if (adminLoginBtn) {
+    adminLoginBtn.addEventListener('click', () => {
+        const password = document.getElementById('adminPassword').value;
+        if (password === ADMIN_PASSWORD) {
+            adminLoggedIn = true;
+            document.getElementById('adminPanel').style.display = 'block';
+            populateDeleteSelect();
+            showMessage('adminMessage', '✅ Admin access granted', 'success');
+        } else {
+            showMessage('adminMessage', '❌ Wrong password', 'error');
+        }
+    });
+}
 
 function populateDeleteSelect() {
     const select = document.getElementById('deleteRatSelect');
@@ -187,24 +216,29 @@ function populateDeleteSelect() {
         currentData.rats.map(rat => `<option value="${rat.id}">${escapeHtml(rat.name)} (Score: ${rat.score || 0})</option>`).join('');
 }
 
-document.getElementById('deleteRatBtn')?.addEventListener('click', async () => {
-    if (!adminLoggedIn) {
-        showMessage('adminMessage', 'Login as admin first', 'error');
-        return;
-    }
-    const ratId = document.getElementById('deleteRatSelect').value;
-    if (!ratId) {
-        showMessage('adminMessage', 'Select a Rat to delete', 'error');
-        return;
-    }
-    currentData.rats = currentData.rats.filter(r => r.id !== ratId);
-    await saveData();
-    showMessage('adminMessage', 'Rat removed from Most Wanted board', 'success');
-    renderRats();
-    populateDeleteSelect();
-});
+const deleteBtn = document.getElementById('deleteRatBtn');
+if (deleteBtn) {
+    deleteBtn.addEventListener('click', async () => {
+        if (!adminLoggedIn) {
+            showMessage('adminMessage', '❌ Login as admin first', 'error');
+            return;
+        }
+        const ratId = document.getElementById('deleteRatSelect').value;
+        if (!ratId) {
+            showMessage('adminMessage', '❌ Select a Rat to delete', 'error');
+            return;
+        }
+        currentData.rats = currentData.rats.filter(r => r.id !== ratId);
+        await saveData();
+        showMessage('adminMessage', '✅ Rat removed from Most Wanted board', 'success');
+        renderRats();
+        populateDeleteSelect();
+    });
+}
 
-// Tab switching
+// ============================================
+// TAB SWITCHING
+// ============================================
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const tabId = btn.dataset.tab;
@@ -213,14 +247,15 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.add('active');
         document.getElementById(tabId).classList.add('active');
         
-        // Refresh data when switching tabs
         if (tabId === 'wanted') renderRats();
         if (tabId === 'hunters') renderHunters();
         if (tabId === 'admin' && adminLoggedIn) populateDeleteSelect();
     });
 });
 
-// Helper functions
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
 function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
@@ -234,15 +269,23 @@ function escapeHtml(str) {
 function showMessage(elementId, text, type) {
     const el = document.getElementById(elementId);
     if (el) {
-        el.innerHTML = `<div class="message ${type}">${text}</div>`;
-        setTimeout(() => { el.innerHTML = ''; }, 3000);
+        el.innerHTML = `<div class="message ${type}" style="padding: 10px; margin: 10px 0; border-radius: 5px; ${type === 'success' ? 'background: #004d00; border-left: 4px solid #00ff00;' : 'background: #4d0000; border-left: 4px solid #ff0000;'}">${text}</div>`;
+        setTimeout(() => { 
+            if (el.innerHTML === `<div class="message ${type}" style="padding: 10px; margin: 10px 0; border-radius: 5px; ${type === 'success' ? 'background: #004d00; border-left: 4px solid #00ff00;' : 'background: #4d0000; border-left: 4px solid #ff0000;'}">${text}</div>`) {
+                el.innerHTML = '';
+            }
+        }, 4000);
     }
 }
 
-// Initialize
+// ============================================
+// INITIALIZATION
+// ============================================
 async function init() {
+    console.log("Initializing...");
     await fetchData();
     renderRats();
     renderHunters();
+    console.log("Ready! Current Rats:", currentData.rats.length);
 }
 init();
