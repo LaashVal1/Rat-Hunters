@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Most Wanted Rats - The Karma Project</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .nav {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .nav a:hover, .nav a.active {
+            background: #ff4444;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #ff4444;
+        }
+
+        h1 {
+            font-size: 3em;
+            color: #ff4444;
+            text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+        }
+
+        .wanted-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .wanted-card {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #ff4444;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wanted-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(255, 68, 68, 0.4);
+        }
+
+        .wanted-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff4444;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .rat-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ff4444;
+            margin-bottom: 10px;
+        }
+
+        .evidence {
+            color: #aaa;
+            margin: 10px 0;
+            padding: 10px;
+            background: #1a1a2e;
+            border-radius: 5px;
+        }
+
+        .meta {
+            font-size: 0.8em;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .status-pending { background: #ff9900; color: #000; }
+        .status-investigating { background: #ff4444; color: #fff; }
+        .status-captured { background: #44ff44; color: #000; }
+
+        .filter-bar {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-bar select, .filter-bar input {
+            padding: 10px;
+            background: #1a1a2e;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 5px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            border-top: 1px solid #333;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2em; }
+            .wanted-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="index.html">🏠 Home</a>
+            <a href="wanted.html" class="active">🐀 Most Wanted</a>
+            <a href="crew.html">👥 Crew</a>
+            <a href="admin.html">🔧 Admin</a>
+        </div>
+
+        <div class="header">
+            <h1>⚠️ MOST WANTED RATS ⚠️</h1>
+            <p style="margin-top: 10px;">"Dead or Alive - Report these criminals"</p>
+        </div>
+
+        <div class="filter-bar">
+            <select id="statusFilter">
+                <option value="all">All Status</option>
+                <option value="Under Investigation">Under Investigation</option>
+                <option value="Confirmed">Confirmed Rat</option>
+                <option value="Captured">Captured</option>
+            </select>
+            <input type="text" id="searchFilter" placeholder="Search by name...">
+            <button onclick="applyFilters()">🔍 Filter</button>
+        </div>
+
+        <div id="wantedList" class="wanted-grid">
+            Loading most wanted rats...
+        </div>
+
+        <div class="footer">
+            <p>⚡ Report rats to add them to the Most Wanted list ⚡</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadWantedList();
+        });
+    </script>
+</body>
+</html>
