@@ -1,44 +1,132 @@
 // ============================================
-// CONFIGURATION - YOU MUST EDIT THESE
-// ============================================
-// Go to JSONBin.io, get your Bin ID and API Key
-// Replace the values below with YOUR actual values
-
-const JSONBIN_BIN_ID = "6a1ea716f5f4af5e29ac50b8";      // ← CHANGE THIS
-const JSONBIN_API_KEY = "$2a$10$EEln8qKG6To8EKOo9w0Fi.98I8khXGC0Jneu.Br8j1rFu6LX5kkFG";    // ← CHANGE THIS
-
-// Admin password - CHANGE THIS to something you'll remember
-const ADMIN_PASSWORD = "CbhWR7PWwdWpAwHvYp";       // ← CHANGE THIS
-
-// ============================================
-// DO NOT EDIT BELOW THIS LINE (unless you know code)
+// THE KARMA PROJECT - RATS HUNTER
+// Complete working script
 // ============================================
 
-let currentData = { rats: [], hunters: [] };
-let adminLoggedIn = false;
+// Configuration - REPLACE THESE WITH YOUR ACTUAL VALUES
+const JSONBIN_BIN_ID = "6a1ea716f5f4af5e29ac50b8";  // Your bin ID from JSONBin
+const JSONBIN_API_KEY = "$2a$10$EEln8qKG6To8EKOo9w0Fi.98I8khXGC0Jneu.Br8j1rFu6LX5kkFG";  // Your Master Key or Access Key
 
-// Helper: Fetch data from JSONBin
-async function fetchData() {
+// API URLs
+const JSONBIN_API_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
+// Check if bin exists and has correct structure when page loads
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log("The Karma Project - Rats Hunter loaded");
+    await initializeDataStructure();
+    await displayRatsList();
+    await displayHuntersList();
+});
+
+// Initialize the data structure if needed
+async function initializeDataStructure() {
     try {
-        const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-            headers: { 'X-Master-Key': JSONBIN_API_KEY }
+        const response = await fetch(JSONBIN_API_URL, {
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY
+            }
         });
-        const data = await response.json();
-        currentData = data.record;
-        if (!currentData.rats) currentData.rats = [];
-        if (!currentData.hunters) currentData.hunters = [];
-        return currentData;
+        
+        const jsonResponse = await response.json();
+        const currentData = jsonResponse.record;
+        
+        // Check if structure is correct
+        let needsUpdate = false;
+        
+        if (!currentData.rats) {
+            currentData.rats = [];
+            needsUpdate = true;
+        }
+        
+        if (!currentData.hunters) {
+            currentData.hunters = [];
+            needsUpdate = true;
+        }
+        
+        // If structure was missing arrays, update the bin
+        if (needsUpdate) {
+            const updateResponse = await fetch(JSONBIN_API_URL, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_API_KEY
+                },
+                body: JSON.stringify({
+                    rats: currentData.rats,
+                    hunters: currentData.hunters
+                })
+            });
+            
+            if (updateResponse.ok) {
+                console.log("Data structure initialized successfully");
+            }
+        }
     } catch (error) {
-        console.error('Fetch error:', error);
-        showMessage('submitMessage', 'Error connecting to database. Check your API keys.', 'error');
-        return { rats: [], hunters: [] };
+        console.error("Error initializing data structure:", error);
     }
 }
 
-// Helper: Save data to JSONBin
-async function saveData() {
+// ============================================
+// SUBMIT RAT FUNCTION
+// ============================================
+
+async function submitRat() {
+    console.log("Form submitted!");
+    
+    // Get input values
+    const ratName = document.getElementById('ratName')?.value;
+    const ratEvidence = document.getElementById('ratEvidence')?.value;
+    
+    // Validate inputs
+    if (!ratName || ratName.trim() === "") {
+        alert("Please enter the rat's name");
+        return;
+    }
+    
+    if (!ratEvidence || ratEvidence.trim() === "") {
+        alert("Please provide evidence");
+        return;
+    }
+    
     try {
-        await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+        // 1. Fetch current data from JSONBin
+        const fetchResponse = await fetch(JSONBIN_API_URL, {
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY
+            }
+        });
+        
+        if (!fetchResponse.ok) {
+            throw new Error(`HTTP error! status: ${fetchResponse.status}`);
+        }
+        
+        const jsonResponse = await fetchResponse.json();
+        const currentData = jsonResponse.record; // CRITICAL: use .record
+        
+        // 2. Ensure rats array exists
+        if (!currentData.rats) {
+            currentData.rats = [];
+        }
+        
+        // 3. Create new rat object
+        const newRat = {
+            id: Date.now(), // Unique ID
+            name: ratName.trim(),
+            evidence: ratEvidence.trim(),
+            reportedBy: "Crew Member",
+            timestamp: new Date().toISOString(),
+            status: "Under Investigation"
+        };
+        
+        // 4. Add to array
+        currentData.rats.push(newRat);
+        
+        // 5. Save back to JSONBin
+        const updateResponse = await fetch(JSONBIN_API_URL, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -46,246 +134,263 @@ async function saveData() {
             },
             body: JSON.stringify(currentData)
         });
-        return true;
+        
+        if (updateResponse.ok) {
+            alert(`✅ Rat "${ratName}" has been reported successfully!`);
+            
+            // Clear the form
+            document.getElementById('ratName').value = '';
+            document.getElementById('ratEvidence').value = '';
+            
+            // Refresh the displayed list
+            await displayRatsList();
+        } else {
+            const errorText = await updateResponse.text();
+            console.error("Update failed:", errorText);
+            alert("❌ Failed to submit rat. Check console for details.");
+        }
     } catch (error) {
-        console.error('Save error:', error);
-        return false;
+        console.error("Error in submitRat:", error);
+        alert("Network error - please check your connection and API keys");
     }
 }
 
-// Render Most Wanted board
-function renderRats() {
-    const container = document.getElementById('ratsList');
-    if (!container) return;
+// ============================================
+// JOIN CREW FUNCTION
+// ============================================
+
+async function joinCrew() {
+    console.log("Join crew form submitted!");
     
-    if (currentData.rats.length === 0) {
-        container.innerHTML = '<div class="loading">🐀 No Rats reported yet. Be the first to submit one!</div>';
+    // Get input values
+    const hunterName = document.getElementById('hunterName')?.value;
+    const hunterRole = document.getElementById('hunterRole')?.value;
+    
+    // Validate inputs
+    if (!hunterName || hunterName.trim() === "") {
+        alert("Please enter your name");
         return;
     }
     
-    const sorted = [...currentData.rats].sort((a, b) => (b.score || 0) - (a.score || 0));
-    
-    container.innerHTML = sorted.map(rat => `
-        <div class="rat-card" data-id="${rat.id}">
-            <h3>🐀 ${escapeHtml(rat.name)}</h3>
-            <div class="evidence">📸 Evidence: ${escapeHtml(rat.evidence)}</div>
-            <div class="votes">
-                <button class="vote-btn up" data-id="${rat.id}">⬆️ Upvote</button>
-                <span class="score">Score: ${rat.score || 0}</span>
-                <button class="vote-btn down" data-id="${rat.id}">⬇️ Downvote</button>
-            </div>
-            <div class="reported-by">Reported by: ${escapeHtml(rat.reporter || 'Anonymous')}</div>
-        </div>
-    `).join('');
-    
-    document.querySelectorAll('.vote-btn.up').forEach(btn => {
-        btn.addEventListener('click', () => vote(btn.dataset.id, 1));
-    });
-    document.querySelectorAll('.vote-btn.down').forEach(btn => {
-        btn.addEventListener('click', () => vote(btn.dataset.id, -1));
-    });
-}
-
-async function vote(ratId, delta) {
-    const rat = currentData.rats.find(r => r.id === ratId);
-    if (rat) {
-        rat.score = (rat.score || 0) + delta;
-        await saveData();
-        renderRats();
-    }
-}
-
-function renderHunters() {
-    const container = document.getElementById('huntersList');
-    if (!container) return;
-    
-    if (currentData.hunters.length === 0) {
-        container.innerHTML = '<div class="loading">🛡️ No Hunters yet. Join the Crew!</div>';
+    if (!hunterRole || hunterRole.trim() === "") {
+        alert("Please enter your role (e.g., Tracker, Sniper, Scout)");
         return;
     }
     
-    container.innerHTML = currentData.hunters.map(hunter => `
-        <div class="hunter-card">
-            <h3>⚔️ ${escapeHtml(hunter.name)}</h3>
-            <div class="platform">Platform: ${escapeHtml(hunter.platform || 'Unknown')}</div>
-        </div>
-    `).join('');
-}
-
-// ============================================
-// SUBMIT RAT FORM - FIXED VERSION
-// ============================================
-const submitForm = document.getElementById('submitRatForm');
-if (submitForm) {
-    submitForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        console.log("Form submitted!"); // Debug line
+    try {
+        // 1. Fetch current data from JSONBin
+        const fetchResponse = await fetch(JSONBIN_API_URL, {
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY
+            }
+        });
         
-        const name = document.getElementById('ratName').value.trim();
-        const evidence = document.getElementById('ratEvidence').value.trim();
-        const reporter = document.getElementById('reporterName').value.trim();
-        
-        console.log("Name:", name, "Evidence:", evidence); // Debug line
-        
-        // Check required fields
-        if (!name) {
-            showMessage('submitMessage', '❌ Please enter the Rat\'s username', 'error');
-            return;
+        if (!fetchResponse.ok) {
+            throw new Error(`HTTP error! status: ${fetchResponse.status}`);
         }
         
-        if (!evidence) {
-            showMessage('submitMessage', '❌ Please provide evidence (description or screenshot link)', 'error');
-            return;
+        const jsonResponse = await fetchResponse.json();
+        const currentData = jsonResponse.record; // CRITICAL: use .record
+        
+        // 2. Ensure hunters array exists
+        if (!currentData.hunters) {
+            currentData.hunters = [];
         }
         
-        // Create new Rat entry
-        const newRat = {
-            id: Date.now().toString(),
-            name: name,
-            evidence: evidence,
-            reporter: reporter || 'Anonymous',
-            score: 0,
-            date: new Date().toISOString()
-        };
-        
-        currentData.rats.push(newRat);
-        const saved = await saveData();
-        
-        if (saved) {
-            showMessage('submitMessage', '✅ Rat added to Most Wanted board!', 'success');
-            document.getElementById('submitRatForm').reset();
-            renderRats();
-        } else {
-            showMessage('submitMessage', '❌ Failed to save. Check your JSONBin settings.', 'error');
-        }
-    });
-}
-
-// ============================================
-// JOIN GUILD FORM
-// ============================================
-const joinForm = document.getElementById('joinForm');
-if (joinForm) {
-    joinForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const name = document.getElementById('hunterName').value.trim();
-        const platform = document.getElementById('platform').value.trim();
-        
-        if (!name) {
-            showMessage('joinMessage', '❌ Please enter your hunter name', 'error');
-            return;
-        }
-        
+        // 3. Create new hunter object
         const newHunter = {
-            id: Date.now().toString(),
-            name: name,
-            platform: platform || 'Not specified'
+            id: Date.now(), // Unique ID
+            name: hunterName.trim(),
+            role: hunterRole.trim(),
+            joinedDate: new Date().toISOString(),
+            status: "Active",
+            reputation: 0,
+            ratsCaught: 0
         };
         
+        // 4. Add to array
         currentData.hunters.push(newHunter);
-        await saveData();
-        showMessage('joinMessage', `✅ Welcome to The Cleanup Crew, ${name}!`, 'success');
-        document.getElementById('joinForm').reset();
-        renderHunters();
-    });
-}
-
-// ============================================
-// ADMIN PANEL
-// ============================================
-const adminLoginBtn = document.getElementById('adminLoginBtn');
-if (adminLoginBtn) {
-    adminLoginBtn.addEventListener('click', () => {
-        const password = document.getElementById('adminPassword').value;
-        if (password === ADMIN_PASSWORD) {
-            adminLoggedIn = true;
-            document.getElementById('adminPanel').style.display = 'block';
-            populateDeleteSelect();
-            showMessage('adminMessage', '✅ Admin access granted', 'success');
-        } else {
-            showMessage('adminMessage', '❌ Wrong password', 'error');
-        }
-    });
-}
-
-function populateDeleteSelect() {
-    const select = document.getElementById('deleteRatSelect');
-    if (!select) return;
-    select.innerHTML = '<option value="">-- Select Rat to Delete --</option>' + 
-        currentData.rats.map(rat => `<option value="${rat.id}">${escapeHtml(rat.name)} (Score: ${rat.score || 0})</option>`).join('');
-}
-
-const deleteBtn = document.getElementById('deleteRatBtn');
-if (deleteBtn) {
-    deleteBtn.addEventListener('click', async () => {
-        if (!adminLoggedIn) {
-            showMessage('adminMessage', '❌ Login as admin first', 'error');
-            return;
-        }
-        const ratId = document.getElementById('deleteRatSelect').value;
-        if (!ratId) {
-            showMessage('adminMessage', '❌ Select a Rat to delete', 'error');
-            return;
-        }
-        currentData.rats = currentData.rats.filter(r => r.id !== ratId);
-        await saveData();
-        showMessage('adminMessage', '✅ Rat removed from Most Wanted board', 'success');
-        renderRats();
-        populateDeleteSelect();
-    });
-}
-
-// ============================================
-// TAB SWITCHING
-// ============================================
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const tabId = btn.dataset.tab;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById(tabId).classList.add('active');
         
-        if (tabId === 'wanted') renderRats();
-        if (tabId === 'hunters') renderHunters();
-        if (tabId === 'admin' && adminLoggedIn) populateDeleteSelect();
-    });
-});
+        // 5. Save back to JSONBin
+        const updateResponse = await fetch(JSONBIN_API_URL, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': JSONBIN_API_KEY
+            },
+            body: JSON.stringify(currentData)
+        });
+        
+        if (updateResponse.ok) {
+            alert(`✅ Welcome to the crew, ${hunterName}! Your role: ${hunterRole}`);
+            
+            // Clear the form
+            document.getElementById('hunterName').value = '';
+            document.getElementById('hunterRole').value = '';
+            
+            // Refresh the displayed list
+            await displayHuntersList();
+        } else {
+            const errorText = await updateResponse.text();
+            console.error("Update failed:", errorText);
+            alert("❌ Failed to join the crew. Check console for details.");
+        }
+    } catch (error) {
+        console.error("Error in joinCrew:", error);
+        alert("Network error - please check your connection and API keys");
+    }
+}
 
 // ============================================
-// HELPER FUNCTIONS
+// DISPLAY FUNCTIONS
 // ============================================
+
+// Display list of reported rats
+async function displayRatsList() {
+    const ratsListElement = document.getElementById('ratsList');
+    if (!ratsListElement) return;
+    
+    try {
+        const response = await fetch(JSONBIN_API_URL, {
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY
+            }
+        });
+        
+        const jsonResponse = await response.json();
+        const currentData = jsonResponse.record;
+        const rats = currentData.rats || [];
+        
+        if (rats.length === 0) {
+            ratsListElement.innerHTML = '<p style="color: #aaa;">No rats reported yet. Be the first!</p>';
+            return;
+        }
+        
+        // Display rats in a nice format
+        let html = '<div class="rats-grid">';
+        rats.slice().reverse().forEach(rat => { // Show newest first
+            html += `
+                <div class="rat-card" style="background: #1a1a2e; padding: 10px; margin: 10px 0; border-left: 3px solid #ff4444;">
+                    <strong>🐀 ${escapeHtml(rat.name)}</strong><br>
+                    <small style="color: #aaa;">Evidence: ${escapeHtml(rat.evidence)}</small><br>
+                    <small style="color: #666;">Reported: ${new Date(rat.timestamp).toLocaleString()}</small>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        ratsListElement.innerHTML = html;
+    } catch (error) {
+        console.error("Error displaying rats:", error);
+        ratsListElement.innerHTML = '<p style="color: #ff4444;">Error loading rats list</p>';
+    }
+}
+
+// Display list of crew hunters
+async function displayHuntersList() {
+    const huntersListElement = document.getElementById('huntersList');
+    if (!huntersListElement) return;
+    
+    try {
+        const response = await fetch(JSONBIN_API_URL, {
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY
+            }
+        });
+        
+        const jsonResponse = await response.json();
+        const currentData = jsonResponse.record;
+        const hunters = currentData.hunters || [];
+        
+        if (hunters.length === 0) {
+            huntersListElement.innerHTML = '<p style="color: #aaa;">No crew members yet. Join the crew!</p>';
+            return;
+        }
+        
+        // Display hunters in a nice format
+        let html = '<div class="hunters-grid">';
+        hunters.forEach(hunter => {
+            html += `
+                <div class="hunter-card" style="background: #1a1a2e; padding: 10px; margin: 10px 0; border-left: 3px solid #44ff44;">
+                    <strong>👤 ${escapeHtml(hunter.name)}</strong><br>
+                    <small>Role: ${escapeHtml(hunter.role)}</small><br>
+                    <small style="color: #666;">Joined: ${new Date(hunter.joinedDate).toLocaleDateString()}</small>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        huntersListElement.innerHTML = html;
+    } catch (error) {
+        console.error("Error displaying hunters:", error);
+        huntersListElement.innerHTML = '<p style="color: #ff4444;">Error loading crew list</p>';
+    }
+}
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+
+// Helper function to prevent XSS attacks
 function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
-function showMessage(elementId, text, type) {
-    const el = document.getElementById(elementId);
-    if (el) {
-        el.innerHTML = `<div class="message ${type}" style="padding: 10px; margin: 10px 0; border-radius: 5px; ${type === 'success' ? 'background: #004d00; border-left: 4px solid #00ff00;' : 'background: #4d0000; border-left: 4px solid #ff0000;'}">${text}</div>`;
-        setTimeout(() => { 
-            if (el.innerHTML === `<div class="message ${type}" style="padding: 10px; margin: 10px 0; border-radius: 5px; ${type === 'success' ? 'background: #004d00; border-left: 4px solid #00ff00;' : 'background: #4d0000; border-left: 4px solid #ff0000;'}">${text}</div>`) {
-                el.innerHTML = '';
+// Function to get total stats
+async function getStats() {
+    try {
+        const response = await fetch(JSONBIN_API_URL, {
+            headers: {
+                'X-Master-Key': JSONBIN_API_KEY
             }
-        }, 4000);
+        });
+        
+        const jsonResponse = await response.json();
+        const currentData = jsonResponse.record;
+        
+        const totalRats = (currentData.rats || []).length;
+        const totalHunters = (currentData.hunters || []).length;
+        
+        return { totalRats, totalHunters };
+    } catch (error) {
+        console.error("Error getting stats:", error);
+        return { totalRats: 0, totalHunters: 0 };
     }
 }
 
-// ============================================
-// INITIALIZATION
-// ============================================
-async function init() {
-    console.log("Initializing...");
-    await fetchData();
-    renderRats();
-    renderHunters();
-    console.log("Ready! Current Rats:", currentData.rats.length);
+// Optional: Update stats display if you have elements for them
+async function updateStatsDisplay() {
+    const stats = await getStats();
+    const ratsCountElement = document.getElementById('ratsCount');
+    const huntersCountElement = document.getElementById('huntersCount');
+    
+    if (ratsCountElement) ratsCountElement.textContent = stats.totalRats;
+    if (huntersCountElement) huntersCountElement.textContent = stats.totalHunters;
 }
-init();
+
+// ============================================
+// ADD THIS TO YOUR HTML
+// ============================================
+/*
+Make sure your HTML has these elements:
+
+<!-- Submit Rat Form -->
+<input type="text" id="ratName" placeholder="Rat's name">
+<textarea id="ratEvidence" placeholder="Evidence"></textarea>
+<button onclick="submitRat()">Submit Rat</button>
+
+<!-- Join Crew Form -->
+<input type="text" id="hunterName" placeholder="Your name">
+<input type="text" id="hunterRole" placeholder="Your role">
+<button onclick="joinCrew()">Join the Crew</button>
+
+<!-- Display Areas -->
+<div id="ratsList"></div>
+<div id="huntersList"></div>
+*/
