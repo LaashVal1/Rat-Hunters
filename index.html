@@ -24,6 +24,36 @@
             margin: 0 auto;
         }
 
+        /* Navigation */
+        .nav {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .nav a:hover {
+            background: #ff4444;
+            transform: translateY(-2px);
+        }
+
+        .nav a.active {
+            background: #ff4444;
+        }
+
         /* Header */
         .header {
             text-align: center;
@@ -32,7 +62,6 @@
             border-radius: 20px;
             margin-bottom: 30px;
             border: 1px solid #ff4444;
-            box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
         }
 
         h1 {
@@ -65,6 +94,13 @@
             flex: 1;
             min-width: 150px;
             border: 1px solid #444;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: #ff4444;
         }
 
         .stat-number {
@@ -113,7 +149,7 @@
             font-weight: bold;
         }
 
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 12px;
             background: #1a1a2e;
@@ -122,13 +158,11 @@
             color: #fff;
             font-family: inherit;
             font-size: 1em;
-            transition: all 0.3s ease;
         }
 
-        input:focus, textarea:focus {
+        input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: #ff4444;
-            box-shadow: 0 0 5px rgba(255, 68, 68, 0.3);
         }
 
         textarea {
@@ -146,7 +180,6 @@
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-family: inherit;
             width: 100%;
         }
 
@@ -155,151 +188,49 @@
             box-shadow: 0 5px 15px rgba(255, 68, 68, 0.4);
         }
 
-        button:active {
-            transform: translateY(0);
-        }
-
-        /* Display Sections */
-        .display-section {
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-        }
-
-        .display-section h2 {
-            margin-bottom: 20px;
-            color: #ff4444;
-        }
-
-        .rats-grid, .hunters-grid {
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 10px;
-        }
-
-        /* Scrollbar Styling */
-        .rats-grid::-webkit-scrollbar,
-        .hunters-grid::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .rats-grid::-webkit-scrollbar-track,
-        .hunters-grid::-webkit-scrollbar-track {
-            background: #1a1a2e;
-            border-radius: 10px;
-        }
-
-        .rats-grid::-webkit-scrollbar-thumb,
-        .hunters-grid::-webkit-scrollbar-thumb {
-            background: #ff4444;
-            border-radius: 10px;
-        }
-
-        /* Cards */
-        .rat-card, .hunter-card {
-            background: #1a1a2e;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .rat-card:hover, .hunter-card:hover {
-            transform: translateX(5px);
-            background: #222;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Footer */
         .footer {
             text-align: center;
             padding: 30px;
             color: #666;
-            font-size: 0.9em;
             border-top: 1px solid #333;
             margin-top: 30px;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2em;
-            }
-            
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-bar {
-                flex-direction: column;
-            }
-            
-            .container {
-                padding: 10px;
-            }
-        }
-
-        /* Loading State */
-        .loading {
-            text-align: center;
-            color: #aaa;
-            padding: 20px;
-        }
-
-        /* Success/Error Messages */
-        .alert {
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            display: none;
-        }
-
-        .alert-success {
-            background: rgba(68, 255, 68, 0.2);
-            border: 1px solid #44ff44;
-            color: #44ff44;
-        }
-
-        .alert-error {
-            background: rgba(255, 68, 68, 0.2);
-            border: 1px solid #ff4444;
-            color: #ff4444;
+            h1 { font-size: 2em; }
+            .main-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Navigation -->
+        <div class="nav">
+            <a href="index.html" class="active">🏠 Home</a>
+            <a href="wanted.html">🐀 Most Wanted</a>
+            <a href="crew.html">👥 Crew</a>
+            <a href="admin.html">🔧 Admin</a>
+        </div>
+
         <!-- Header -->
         <div class="header">
             <h1>🐀 THE KARMA PROJECT 🎯</h1>
-            <div class="tagline">"Rats in the SpacePort? We hunt them down."</div>
+            <div class="tagline">"Report Rats. Join the Hunt. Bring Justice."</div>
         </div>
 
         <!-- Statistics Bar -->
         <div class="stats-bar">
-            <div class="stat-card">
+            <div class="stat-card" onclick="location.href='wanted.html'">
                 <div class="stat-number" id="ratsCount">0</div>
                 <div class="stat-label">🐀 Rats Reported</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" onclick="location.href='crew.html'">
                 <div class="stat-number" id="huntersCount">0</div>
                 <div class="stat-label">👥 Crew Members</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="activeBounties">Active</div>
-                <div class="stat-label">💀 Bounty Status</div>
+                <div class="stat-number" id="wantedCount">0</div>
+                <div class="stat-label">⚠️ Most Wanted</div>
             </div>
         </div>
 
@@ -308,14 +239,14 @@
             <!-- Submit Rat Form -->
             <div class="form-section">
                 <h2>🐀 Report a Rat</h2>
-                <form id="ratForm" onsubmit="event.preventDefault(); submitRat();">
+                <form onsubmit="event.preventDefault(); submitRat();">
                     <div class="form-group">
-                        <label for="ratName">Rat's Name / Alias:</label>
-                        <input type="text" id="ratName" placeholder="e.g., SEM#0450" required>
+                        <label>Rat's Name / Alias:</label>
+                        <input type="text" id="ratName" required>
                     </div>
                     <div class="form-group">
-                        <label for="ratEvidence">Evidence / Description:</label>
-                        <textarea id="ratEvidence" placeholder="Describe their actions, location, time..." required></textarea>
+                        <label>Evidence / Description:</label>
+                        <textarea id="ratEvidence" required></textarea>
                     </div>
                     <button type="submit">🔍 Submit Rat Report</button>
                 </form>
@@ -324,42 +255,44 @@
             <!-- Join Crew Form -->
             <div class="form-section">
                 <h2>👤 Join the Crew</h2>
-                <form id="crewForm" onsubmit="event.preventDefault(); joinCrew();">
+                <form onsubmit="event.preventDefault(); joinCrew();">
                     <div class="form-group">
-                        <label for="hunterName">Your Name / Handle:</label>
-                        <input type="text" id="hunterName" placeholder="e.g., BountyHunter99" required>
+                        <label>Your Name / Handle:</label>
+                        <input type="text" id="hunterName" required>
                     </div>
                     <div class="form-group">
-                        <label for="hunterRole">Your Role:</label>
-                        <input type="text" id="hunterRole" placeholder="e.g., Tracker, Sniper, Scout, Intel" required>
+                        <label>Your Role:</label>
+                        <select id="hunterRole">
+                            <option value="Tracker">Tracker</option>
+                            <option value="Sniper">Sniper</option>
+                            <option value="Scout">Scout</option>
+                            <option value="Intel">Intel</option>
+                            <option value="Bounty Hunter">Bounty Hunter</option>
+                        </select>
                     </div>
                     <button type="submit">⚔️ Join the Hunt</button>
                 </form>
             </div>
         </div>
 
-        <!-- Display Sections -->
-        <div class="display-section">
-            <h2>🐀 Recent Rat Reports</h2>
-            <div id="ratsList">
-                <div class="loading">Loading reported rats...</div>
-            </div>
+        <!-- Recent Reports Preview -->
+        <div class="form-section">
+            <h2>📋 Recent Reports</h2>
+            <div id="recentReports">Loading...</div>
         </div>
 
-        <div class="display-section">
-            <h2>👥 Crew Members - Active Hunters</h2>
-            <div id="huntersList">
-                <div class="loading">Loading crew members...</div>
-            </div>
-        </div>
-
-        <!-- Footer -->
         <div class="footer">
             <p>⚡ The Karma Project - Justice in the SpacePort ⚡</p>
-            <p style="font-size: 0.8em; margin-top: 10px;">"Every rat has a tail. We find it."</p>
         </div>
     </div>
 
     <script src="script.js"></script>
+    <script>
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRecentReports();
+            updateAllStats();
+        });
+    </script>
 </body>
 </html>
