@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arc Raiders - The Cleanup Crew | Most Wanted Rats</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚔️ THE CLEANUP CREW ⚔️</h1>
+            <p class="tagline">"No Rat Escapes the Hunt"</p>
+            <p class="subtitle">Arc Raiders • Guild Headquarters • Most Wanted Bulletin Board</p>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="wanted">🐀 MOST WANTED RATS</button>
+            <button class="tab-btn" data-tab="hunters">🛡️ HUNTER ROSTER</button>
+            <button class="tab-btn" data-tab="submit">📝 SUBMIT A RAT</button>
+            <button class="tab-btn" data-tab="join">🤝 JOIN THE CREW</button>
+            <button class="tab-btn" data-tab="admin">🔧 ADMIN</button>
+        </nav>
+
+        <!-- MOST WANTED TAB -->
+        <div id="wanted" class="tab-content active">
+            <div class="wanted-header">
+                <h2>🔴 MOST WANTED 🔴</h2>
+                <p>These Rats have been preying on Raiders. Bring them to justice.</p>
+            </div>
+            <div id="ratsList" class="rats-grid">
+                <div class="loading">Loading Most Wanted list...</div>
+            </div>
+        </div>
+
+        <!-- HUNTER ROSTER TAB -->
+        <div id="hunters" class="tab-content">
+            <div class="hunters-header">
+                <h2>🛡️ ACTIVE HUNTERS 🛡️</h2>
+                <p>Those who have sworn to hunt down the Rats.</p>
+            </div>
+            <div id="huntersList" class="hunters-grid">
+                <div class="loading">Loading hunter roster...</div>
+            </div>
+        </div>
+
+        <!-- SUBMIT RAT TAB -->
+        <div id="submit" class="tab-content">
+            <h2>🐀 REPORT A RAT</h2>
+            <p>Know a player who preys on others? Report them here. Include evidence (screenshot link).</p>
+            <form id="submitRatForm">
+                <input type="text" id="ratName" placeholder="Rat's Username" required>
+                <textarea id="ratEvidence" placeholder="Evidence description + screenshot link (Imgur, etc.)" rows="3" required></textarea>
+                <input type="text" id="reporterName" placeholder="Your Hunter name (optional)">
+                <button type="submit">📢 ADD TO MOST WANTED</button>
+            </form>
+            <div id="submitMessage" class="message"></div>
+        </div>
+
+        <!-- JOIN GUILD TAB -->
+        <div id="join" class="tab-content">
+            <h2>🤝 JOIN THE CLEANUP CREW</h2>
+            <p>Add your name to the Hunter Roster. Together we hunt the Rats.</p>
+            <form id="joinForm">
+                <input type="text" id="hunterName" placeholder="Your Hunter Name / Gamertag" required>
+                <input type="text" id="platform" placeholder="Platform (PC/PS5/Xbox)">
+                <button type="submit">⚔️ JOIN THE HUNT ⚔️</button>
+            </form>
+            <div id="joinMessage" class="message"></div>
+        </div>
+
+        <!-- ADMIN TAB -->
+        <div id="admin" class="tab-content">
+            <h2>🔧 ADMIN PANEL</h2>
+            <p>Remove fake or outdated Rat reports. Enter password to continue.</p>
+            <input type="password" id="adminPassword" placeholder="Enter admin password">
+            <button id="adminLoginBtn">Login</button>
+            <div id="adminPanel" style="display:none; margin-top:20px;">
+                <h3>Delete a Rat Report</h3>
+                <select id="deleteRatSelect"></select>
+                <button id="deleteRatBtn">🗑️ Delete Selected Rat</button>
+                <div id="adminMessage" class="message"></div>
+            </div>
+        </div>
+
+        <footer>
+            <p>The Cleanup Crew • For Raiders, By Raiders • Evidence required for all listings</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
