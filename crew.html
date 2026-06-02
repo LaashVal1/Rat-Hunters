@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crew - The Karma Project</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .nav {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            color: #fff;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .nav a:hover, .nav a.active {
+            background: #44ff44;
+            color: #000;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #44ff44;
+        }
+
+        h1 {
+            font-size: 3em;
+            color: #44ff44;
+            text-shadow: 0 0 10px rgba(68, 255, 68, 0.5);
+        }
+
+        .stats-summary {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #44ff44;
+        }
+
+        .crew-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .crew-card {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #44ff44;
+            transition: all 0.3s ease;
+        }
+
+        .crew-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(68, 255, 68, 0.3);
+        }
+
+        .hunter-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #44ff44;
+        }
+
+        .role {
+            display: inline-block;
+            background: #44ff44;
+            color: #000;
+            padding: 3px 10px;
+            border-radius: 5px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .joined-date {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+            border-top: 1px solid #333;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="index.html">🏠 Home</a>
+            <a href="wanted.html">🐀 Most Wanted</a>
+            <a href="crew.html" class="active">👥 Crew</a>
+            <a href="admin.html">🔧 Admin</a>
+        </div>
+
+        <div class="header">
+            <h1>👥 THE CREW 👥</h1>
+            <p style="margin-top: 10px;">"United we hunt. Together we bring justice."</p>
+        </div>
+
+        <div class="stats-summary">
+            <div class="stat-box">
+                <div class="stat-number" id="totalHunters">0</div>
+                <div>Active Hunters</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="totalRatsCaught">0</div>
+                <div>Rats Captured</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="topHunter">-</div>
+                <div>Top Hunter</div>
+            </div>
+        </div>
+
+        <div id="crewList" class="crew-grid">
+            Loading crew members...
+        </div>
+
+        <div class="footer">
+            <p>⚔️ Join the crew on the home page ⚔️</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCrewList();
+        });
+    </script>
+</body>
+</html>
