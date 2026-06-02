@@ -3,9 +3,9 @@
 // Complete working script
 // ============================================
 
-// Configuration - REPLACE THESE WITH YOUR ACTUAL VALUES
-const JSONBIN_BIN_ID = "6a1ea716f5f4af5e29ac50b8";  // Your bin ID from JSONBin
-const JSONBIN_API_KEY = "$2a$10$EEln8qKG6To8EKOo9w0Fi.98I8khXGC0Jneu.Br8j1rFu6LX5kkFG";  // Your Master Key or Access Key
+// Configuration - YOUR CORRECT VALUES
+const JSONBIN_BIN_ID = "6a1ea716f5f4af5e29ac50b8";
+const JSONBIN_API_KEY = "$2a$10$EEln8qKG6To8EKOo9w0Fi.98I8khXGC0Jneu.Br8j1rFu6LX5kkFG";
 
 // API URLs
 const JSONBIN_API_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
