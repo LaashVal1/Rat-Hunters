@@ -1,230 +1,109 @@
 // ============================================
-// THE KARMA PROJECT - RATS HUNTER
-// COMPLETE WORKING SCRIPT
+// THE KARMA PROJECT - SHARED FUNCTIONS
 // ============================================
 
-// Configuration - YOUR WORKING VALUES
 const JSONBIN_BIN_ID = "6a1ea716f5f4af5e29ac50b8";
 const JSONBIN_API_KEY = "$2a$10$EEln8qKG6To8EKOo9w0Fi.98I8khXGC0Jneu.Br8j1rFu6LX5kkFG";
-
-// API URLs
 const JSONBIN_API_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 
 // ============================================
-// INITIALIZATION
+// CORE FUNCTIONS
 // ============================================
 
-document.addEventListener('DOMContentLoaded', async () => {
-    console.log("The Karma Project - Rats Hunter loaded");
-    await initializeDataStructure();
-    await displayRatsList();
-    await displayHuntersList();
-    await updateStatsDisplay();
-});
+async function getData() {
+    const response = await fetch(JSONBIN_API_URL, {
+        headers: { 'X-Access-Key': JSONBIN_API_KEY }
+    });
+    const json = await response.json();
+    return json.record;
+}
 
-async function initializeDataStructure() {
-    try {
-        const response = await fetch(JSONBIN_API_URL, {
-            headers: {
-                'X-Access-Key': JSONBIN_API_KEY
-            }
-        });
-        
-        const jsonResponse = await response.json();
-        const currentData = jsonResponse.record;
-        
-        let needsUpdate = false;
-        
-        if (!currentData.rats) {
-            currentData.rats = [];
-            needsUpdate = true;
-        }
-        
-        if (!currentData.hunters) {
-            currentData.hunters = [];
-            needsUpdate = true;
-        }
-        
-        if (needsUpdate) {
-            const updateResponse = await fetch(JSONBIN_API_URL, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Access-Key': JSONBIN_API_KEY
-                },
-                body: JSON.stringify({
-                    rats: currentData.rats,
-                    hunters: currentData.hunters
-                })
-            });
-            
-            if (updateResponse.ok) {
-                console.log("✅ Data structure initialized successfully");
-            }
-        } else {
-            console.log("✅ Data structure already correct");
-        }
-    } catch (error) {
-        console.error("Error initializing data structure:", error);
-    }
+async function saveData(data) {
+    const response = await fetch(JSONBIN_API_URL, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Access-Key': JSONBIN_API_KEY
+        },
+        body: JSON.stringify(data)
+    });
+    return response.ok;
 }
 
 // ============================================
-// SUBMIT RAT FUNCTION
+// SUBMIT RAT
 // ============================================
 
 async function submitRat() {
-    console.log("Submit rat form submitted!");
+    const name = document.getElementById('ratName')?.value;
+    const evidence = document.getElementById('ratEvidence')?.value;
     
-    const ratName = document.getElementById('ratName')?.value;
-    const ratEvidence = document.getElementById('ratEvidence')?.value;
-    
-    if (!ratName || ratName.trim() === "") {
-        alert("Please enter the rat's name");
-        return;
-    }
-    
-    if (!ratEvidence || ratEvidence.trim() === "") {
-        alert("Please provide evidence");
+    if (!name || !evidence) {
+        alert("Please fill both fields");
         return;
     }
     
     try {
-        // Fetch current data
-        const fetchResponse = await fetch(JSONBIN_API_URL, {
-            headers: {
-                'X-Access-Key': JSONBIN_API_KEY
-            }
-        });
+        const data = await getData();
+        if (!data.rats) data.rats = [];
         
-        if (!fetchResponse.ok) {
-            throw new Error(`HTTP error! status: ${fetchResponse.status}`);
-        }
-        
-        const jsonResponse = await fetchResponse.json();
-        const currentData = jsonResponse.record;
-        
-        // Ensure rats array exists
-        if (!currentData.rats) {
-            currentData.rats = [];
-        }
-        
-        // Add new rat
-        const newRat = {
+        data.rats.push({
             id: Date.now(),
-            name: ratName.trim(),
-            evidence: ratEvidence.trim(),
-            reportedBy: "Crew Member",
+            name: name.trim(),
+            evidence: evidence.trim(),
             timestamp: new Date().toISOString(),
-            status: "Under Investigation"
-        };
-        
-        currentData.rats.push(newRat);
-        
-        // Save back to JSONBin
-        const updateResponse = await fetch(JSONBIN_API_URL, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Access-Key': JSONBIN_API_KEY
-            },
-            body: JSON.stringify(currentData)
+            status: "Under Investigation",
+            reportedBy: "Crew Member"
         });
         
-        if (updateResponse.ok) {
-            alert(`✅ Rat "${ratName}" has been reported successfully!`);
+        if (await saveData(data)) {
+            alert(`✅ Rat "${name}" reported!`);
             document.getElementById('ratName').value = '';
             document.getElementById('ratEvidence').value = '';
-            await displayRatsList();
-            await updateStatsDisplay();
-        } else {
-            const errorText = await updateResponse.text();
-            console.error("Update failed:", errorText);
-            alert("❌ Failed to submit rat. Check console for details.");
+            updateAllStats();
+            loadRecentReports();
         }
     } catch (error) {
-        console.error("Error in submitRat:", error);
-        alert("Network error - check console for details");
+        console.error(error);
+        alert("Error submitting rat");
     }
 }
 
 // ============================================
-// JOIN CREW FUNCTION
+// JOIN CREW
 // ============================================
 
 async function joinCrew() {
-    console.log("Join crew form submitted!");
+    const name = document.getElementById('hunterName')?.value;
+    const role = document.getElementById('hunterRole')?.value;
     
-    const hunterName = document.getElementById('hunterName')?.value;
-    const hunterRole = document.getElementById('hunterRole')?.value;
-    
-    if (!hunterName || hunterName.trim() === "") {
-        alert("Please enter your name");
-        return;
-    }
-    
-    if (!hunterRole || hunterRole.trim() === "") {
-        alert("Please enter your role");
+    if (!name || !role) {
+        alert("Please fill both fields");
         return;
     }
     
     try {
-        // Fetch current data
-        const fetchResponse = await fetch(JSONBIN_API_URL, {
-            headers: {
-                'X-Access-Key': JSONBIN_API_KEY
-            }
-        });
+        const data = await getData();
+        if (!data.hunters) data.hunters = [];
         
-        if (!fetchResponse.ok) {
-            throw new Error(`HTTP error! status: ${fetchResponse.status}`);
-        }
-        
-        const jsonResponse = await fetchResponse.json();
-        const currentData = jsonResponse.record;
-        
-        // Ensure hunters array exists
-        if (!currentData.hunters) {
-            currentData.hunters = [];
-        }
-        
-        // Add new hunter
-        const newHunter = {
+        data.hunters.push({
             id: Date.now(),
-            name: hunterName.trim(),
-            role: hunterRole.trim(),
+            name: name.trim(),
+            role: role,
             joinedDate: new Date().toISOString(),
             status: "Active",
-            reputation: 0,
             ratsCaught: 0
-        };
-        
-        currentData.hunters.push(newHunter);
-        
-        // Save back to JSONBin
-        const updateResponse = await fetch(JSONBIN_API_URL, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Access-Key': JSONBIN_API_KEY
-            },
-            body: JSON.stringify(currentData)
         });
         
-        if (updateResponse.ok) {
-            alert(`✅ Welcome to the crew, ${hunterName}!`);
+        if (await saveData(data)) {
+            alert(`✅ Welcome to the crew, ${name}!`);
             document.getElementById('hunterName').value = '';
-            document.getElementById('hunterRole').value = '';
-            await displayHuntersList();
-            await updateStatsDisplay();
-        } else {
-            const errorText = await updateResponse.text();
-            console.error("Update failed:", errorText);
-            alert("❌ Failed to join the crew. Check console for details.");
+            updateAllStats();
+            if (typeof loadCrewList === 'function') loadCrewList();
         }
     } catch (error) {
-        console.error("Error in joinCrew:", error);
-        alert("Network error - check console for details");
+        console.error(error);
+        alert("Error joining crew");
     }
 }
 
@@ -232,124 +111,106 @@ async function joinCrew() {
 // DISPLAY FUNCTIONS
 // ============================================
 
-async function displayRatsList() {
-    const ratsListElement = document.getElementById('ratsList');
-    if (!ratsListElement) return;
+async function updateAllStats() {
+    const data = await getData();
+    const ratsCount = document.getElementById('ratsCount');
+    const huntersCount = document.getElementById('huntersCount');
+    const wantedCount = document.getElementById('wantedCount');
     
-    try {
-        const response = await fetch(JSONBIN_API_URL, {
-            headers: {
-                'X-Access-Key': JSONBIN_API_KEY
-            }
-        });
-        
-        const jsonResponse = await response.json();
-        const currentData = jsonResponse.record;
-        const rats = currentData.rats || [];
-        
-        if (rats.length === 0) {
-            ratsListElement.innerHTML = '<p style="color: #aaa;">No rats reported yet. Be the first!</p>';
-            return;
-        }
-        
-        let html = '<div class="rats-grid">';
-        [...rats].reverse().forEach(rat => {
-            html += `
-                <div class="rat-card" style="background: #1a1a2e; padding: 10px; margin: 10px 0; border-left: 3px solid #ff4444;">
-                    <strong>🐀 ${escapeHtml(rat.name)}</strong><br>
-                    <small style="color: #aaa;">Evidence: ${escapeHtml(rat.evidence)}</small><br>
-                    <small style="color: #666;">Reported: ${new Date(rat.timestamp).toLocaleString()}</small>
-                </div>
-            `;
-        });
-        html += '</div>';
-        
-        ratsListElement.innerHTML = html;
-    } catch (error) {
-        console.error("Error displaying rats:", error);
-        ratsListElement.innerHTML = '<p style="color: #ff4444;">Error loading rats list</p>';
-    }
+    if (ratsCount) ratsCount.textContent = data.rats?.length || 0;
+    if (huntersCount) huntersCount.textContent = data.hunters?.length || 0;
+    if (wantedCount) wantedCount.textContent = data.rats?.filter(r => r.status !== "Captured").length || 0;
 }
 
-async function displayHuntersList() {
-    const huntersListElement = document.getElementById('huntersList');
-    if (!huntersListElement) return;
+async function loadRecentReports() {
+    const container = document.getElementById('recentReports');
+    if (!container) return;
     
-    try {
-        const response = await fetch(JSONBIN_API_URL, {
-            headers: {
-                'X-Access-Key': JSONBIN_API_KEY
-            }
-        });
-        
-        const jsonResponse = await response.json();
-        const currentData = jsonResponse.record;
-        const hunters = currentData.hunters || [];
-        
-        if (hunters.length === 0) {
-            huntersListElement.innerHTML = '<p style="color: #aaa;">No crew members yet. Join the crew!</p>';
-            return;
-        }
-        
-        let html = '<div class="hunters-grid">';
-        hunters.forEach(hunter => {
-            html += `
-                <div class="hunter-card" style="background: #1a1a2e; padding: 10px; margin: 10px 0; border-left: 3px solid #44ff44;">
-                    <strong>👤 ${escapeHtml(hunter.name)}</strong><br>
-                    <small>Role: ${escapeHtml(hunter.role)}</small><br>
-                    <small style="color: #666;">Joined: ${new Date(hunter.joinedDate).toLocaleDateString()}</small>
-                </div>
-            `;
-        });
-        html += '</div>';
-        
-        huntersListElement.innerHTML = html;
-    } catch (error) {
-        console.error("Error displaying hunters:", error);
-        huntersListElement.innerHTML = '<p style="color: #ff4444;">Error loading crew list</p>';
+    const data = await getData();
+    const rats = data.rats || [];
+    
+    if (rats.length === 0) {
+        container.innerHTML = '<p>No reports yet.</p>';
+        return;
     }
+    
+    const recent = [...rats].reverse().slice(0, 5);
+    container.innerHTML = recent.map(rat => `
+        <div style="background:#1a1a2e; padding:10px; margin:10px 0; border-left: 3px solid #ff4444;">
+            <strong>🐀 ${escapeHtml(rat.name)}</strong><br>
+            ${escapeHtml(rat.evidence.substring(0, 100))}...<br>
+            <small>${new Date(rat.timestamp).toLocaleString()}</small>
+        </div>
+    `).join('');
 }
 
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
+async function loadWantedList() {
+    const container = document.getElementById('wantedList');
+    if (!container) return;
+    
+    const data = await getData();
+    let rats = data.rats || [];
+    rats = rats.filter(r => r.status !== "Captured");
+    
+    if (rats.length === 0) {
+        container.innerHTML = '<p style="grid-column:1/-1; text-align:center;">No wanted rats at this time.</p>';
+        return;
+    }
+    
+    container.innerHTML = rats.map(rat => `
+        <div class="wanted-card">
+            <div class="wanted-badge">⚠️ WANTED</div>
+            <div class="rat-name">🐀 ${escapeHtml(rat.name)}</div>
+            <div class="evidence">${escapeHtml(rat.evidence)}</div>
+            <div class="meta">Reported: ${new Date(rat.timestamp).toLocaleDateString()}</div>
+            <div class="status status-${rat.status === 'Under Investigation' ? 'pending' : 'investigating'}">${rat.status}</div>
+        </div>
+    `).join('');
+}
+
+async function loadCrewList() {
+    const container = document.getElementById('crewList');
+    if (!container) return;
+    
+    const data = await getData();
+    const hunters = data.hunters || [];
+    
+    if (hunters.length === 0) {
+        container.innerHTML = '<p style="grid-column:1/-1; text-align:center;">No crew members yet. Join on the home page!</p>';
+        return;
+    }
+    
+    const totalHunters = document.getElementById('totalHunters');
+    if (totalHunters) totalHunters.textContent = hunters.length;
+    
+    container.innerHTML = hunters.map(hunter => `
+        <div class="crew-card">
+            <div class="hunter-name">👤 ${escapeHtml(hunter.name)}</div>
+            <div class="role">${escapeHtml(hunter.role)}</div>
+            <div class="joined-date">Joined: ${new Date(hunter.joinedDate).toLocaleDateString()}</div>
+            <div style="margin-top: 10px;">🐀 Rats caught: ${hunter.ratsCaught || 0}</div>
+        </div>
+    `).join('');
+}
+
+function applyFilters() {
+    const status = document.getElementById('statusFilter')?.value;
+    const search = document.getElementById('searchFilter')?.value.toLowerCase();
+    // Re-implement filtering if needed
+    loadWantedList();
+}
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
 }
 
-async function getStats() {
-    try {
-        const response = await fetch(JSONBIN_API_URL, {
-            headers: {
-                'X-Access-Key': JSONBIN_API_KEY
-            }
-        });
-        
-        const jsonResponse = await response.json();
-        const currentData = jsonResponse.record;
-        
-        return {
-            totalRats: (currentData.rats || []).length,
-            totalHunters: (currentData.hunters || []).length
-        };
-    } catch (error) {
-        console.error("Error getting stats:", error);
-        return { totalRats: 0, totalHunters: 0 };
-    }
-}
-
-async function updateStatsDisplay() {
-    const stats = await getStats();
-    const ratsCountElement = document.getElementById('ratsCount');
-    const huntersCountElement = document.getElementById('huntersCount');
-    
-    if (ratsCountElement) ratsCountElement.textContent = stats.totalRats;
-    if (huntersCountElement) huntersCountElement.textContent = stats.totalHunters;
-}
+// Make functions global
+window.submitRat = submitRat;
+window.joinCrew = joinCrew;
+window.applyFilters = applyFilters;
