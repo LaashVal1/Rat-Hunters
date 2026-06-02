@@ -1,9 +1,9 @@
 // ============================================
 // THE KARMA PROJECT - RATS HUNTER
-// Complete working script
+// COMPLETE WORKING SCRIPT
 // ============================================
 
-// Configuration - YOUR CORRECT VALUES
+// Configuration - YOUR WORKING VALUES
 const JSONBIN_BIN_ID = "6a1ea716f5f4af5e29ac50b8";
 const JSONBIN_API_KEY = "$2a$10$EEln8qKG6To8EKOo9w0Fi.98I8khXGC0Jneu.Br8j1rFu6LX5kkFG";
 
@@ -14,27 +14,25 @@ const JSONBIN_API_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
 // INITIALIZATION
 // ============================================
 
-// Check if bin exists and has correct structure when page loads
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("The Karma Project - Rats Hunter loaded");
     await initializeDataStructure();
     await displayRatsList();
     await displayHuntersList();
+    await updateStatsDisplay();
 });
 
-// Initialize the data structure if needed
 async function initializeDataStructure() {
     try {
         const response = await fetch(JSONBIN_API_URL, {
             headers: {
-                'X-Master-Key': JSONBIN_API_KEY
+                'X-Access-Key': JSONBIN_API_KEY
             }
         });
         
         const jsonResponse = await response.json();
         const currentData = jsonResponse.record;
         
-        // Check if structure is correct
         let needsUpdate = false;
         
         if (!currentData.rats) {
@@ -47,13 +45,12 @@ async function initializeDataStructure() {
             needsUpdate = true;
         }
         
-        // If structure was missing arrays, update the bin
         if (needsUpdate) {
             const updateResponse = await fetch(JSONBIN_API_URL, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Master-Key': JSONBIN_API_KEY
+                    'X-Access-Key': JSONBIN_API_KEY
                 },
                 body: JSON.stringify({
                     rats: currentData.rats,
@@ -62,8 +59,10 @@ async function initializeDataStructure() {
             });
             
             if (updateResponse.ok) {
-                console.log("Data structure initialized successfully");
+                console.log("✅ Data structure initialized successfully");
             }
+        } else {
+            console.log("✅ Data structure already correct");
         }
     } catch (error) {
         console.error("Error initializing data structure:", error);
@@ -75,13 +74,11 @@ async function initializeDataStructure() {
 // ============================================
 
 async function submitRat() {
-    console.log("Form submitted!");
+    console.log("Submit rat form submitted!");
     
-    // Get input values
     const ratName = document.getElementById('ratName')?.value;
     const ratEvidence = document.getElementById('ratEvidence')?.value;
     
-    // Validate inputs
     if (!ratName || ratName.trim() === "") {
         alert("Please enter the rat's name");
         return;
@@ -93,10 +90,10 @@ async function submitRat() {
     }
     
     try {
-        // 1. Fetch current data from JSONBin
+        // Fetch current data
         const fetchResponse = await fetch(JSONBIN_API_URL, {
             headers: {
-                'X-Master-Key': JSONBIN_API_KEY
+                'X-Access-Key': JSONBIN_API_KEY
             }
         });
         
@@ -105,16 +102,16 @@ async function submitRat() {
         }
         
         const jsonResponse = await fetchResponse.json();
-        const currentData = jsonResponse.record; // CRITICAL: use .record
+        const currentData = jsonResponse.record;
         
-        // 2. Ensure rats array exists
+        // Ensure rats array exists
         if (!currentData.rats) {
             currentData.rats = [];
         }
         
-        // 3. Create new rat object
+        // Add new rat
         const newRat = {
-            id: Date.now(), // Unique ID
+            id: Date.now(),
             name: ratName.trim(),
             evidence: ratEvidence.trim(),
             reportedBy: "Crew Member",
@@ -122,28 +119,24 @@ async function submitRat() {
             status: "Under Investigation"
         };
         
-        // 4. Add to array
         currentData.rats.push(newRat);
         
-        // 5. Save back to JSONBin
+        // Save back to JSONBin
         const updateResponse = await fetch(JSONBIN_API_URL, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_API_KEY
+                'X-Access-Key': JSONBIN_API_KEY
             },
             body: JSON.stringify(currentData)
         });
         
         if (updateResponse.ok) {
             alert(`✅ Rat "${ratName}" has been reported successfully!`);
-            
-            // Clear the form
             document.getElementById('ratName').value = '';
             document.getElementById('ratEvidence').value = '';
-            
-            // Refresh the displayed list
             await displayRatsList();
+            await updateStatsDisplay();
         } else {
             const errorText = await updateResponse.text();
             console.error("Update failed:", errorText);
@@ -151,7 +144,7 @@ async function submitRat() {
         }
     } catch (error) {
         console.error("Error in submitRat:", error);
-        alert("Network error - please check your connection and API keys");
+        alert("Network error - check console for details");
     }
 }
 
@@ -162,26 +155,24 @@ async function submitRat() {
 async function joinCrew() {
     console.log("Join crew form submitted!");
     
-    // Get input values
     const hunterName = document.getElementById('hunterName')?.value;
     const hunterRole = document.getElementById('hunterRole')?.value;
     
-    // Validate inputs
     if (!hunterName || hunterName.trim() === "") {
         alert("Please enter your name");
         return;
     }
     
     if (!hunterRole || hunterRole.trim() === "") {
-        alert("Please enter your role (e.g., Tracker, Sniper, Scout)");
+        alert("Please enter your role");
         return;
     }
     
     try {
-        // 1. Fetch current data from JSONBin
+        // Fetch current data
         const fetchResponse = await fetch(JSONBIN_API_URL, {
             headers: {
-                'X-Master-Key': JSONBIN_API_KEY
+                'X-Access-Key': JSONBIN_API_KEY
             }
         });
         
@@ -190,16 +181,16 @@ async function joinCrew() {
         }
         
         const jsonResponse = await fetchResponse.json();
-        const currentData = jsonResponse.record; // CRITICAL: use .record
+        const currentData = jsonResponse.record;
         
-        // 2. Ensure hunters array exists
+        // Ensure hunters array exists
         if (!currentData.hunters) {
             currentData.hunters = [];
         }
         
-        // 3. Create new hunter object
+        // Add new hunter
         const newHunter = {
-            id: Date.now(), // Unique ID
+            id: Date.now(),
             name: hunterName.trim(),
             role: hunterRole.trim(),
             joinedDate: new Date().toISOString(),
@@ -208,28 +199,24 @@ async function joinCrew() {
             ratsCaught: 0
         };
         
-        // 4. Add to array
         currentData.hunters.push(newHunter);
         
-        // 5. Save back to JSONBin
+        // Save back to JSONBin
         const updateResponse = await fetch(JSONBIN_API_URL, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Master-Key': JSONBIN_API_KEY
+                'X-Access-Key': JSONBIN_API_KEY
             },
             body: JSON.stringify(currentData)
         });
         
         if (updateResponse.ok) {
-            alert(`✅ Welcome to the crew, ${hunterName}! Your role: ${hunterRole}`);
-            
-            // Clear the form
+            alert(`✅ Welcome to the crew, ${hunterName}!`);
             document.getElementById('hunterName').value = '';
             document.getElementById('hunterRole').value = '';
-            
-            // Refresh the displayed list
             await displayHuntersList();
+            await updateStatsDisplay();
         } else {
             const errorText = await updateResponse.text();
             console.error("Update failed:", errorText);
@@ -237,7 +224,7 @@ async function joinCrew() {
         }
     } catch (error) {
         console.error("Error in joinCrew:", error);
-        alert("Network error - please check your connection and API keys");
+        alert("Network error - check console for details");
     }
 }
 
@@ -245,7 +232,6 @@ async function joinCrew() {
 // DISPLAY FUNCTIONS
 // ============================================
 
-// Display list of reported rats
 async function displayRatsList() {
     const ratsListElement = document.getElementById('ratsList');
     if (!ratsListElement) return;
@@ -253,7 +239,7 @@ async function displayRatsList() {
     try {
         const response = await fetch(JSONBIN_API_URL, {
             headers: {
-                'X-Master-Key': JSONBIN_API_KEY
+                'X-Access-Key': JSONBIN_API_KEY
             }
         });
         
@@ -266,9 +252,8 @@ async function displayRatsList() {
             return;
         }
         
-        // Display rats in a nice format
         let html = '<div class="rats-grid">';
-        rats.slice().reverse().forEach(rat => { // Show newest first
+        [...rats].reverse().forEach(rat => {
             html += `
                 <div class="rat-card" style="background: #1a1a2e; padding: 10px; margin: 10px 0; border-left: 3px solid #ff4444;">
                     <strong>🐀 ${escapeHtml(rat.name)}</strong><br>
@@ -286,7 +271,6 @@ async function displayRatsList() {
     }
 }
 
-// Display list of crew hunters
 async function displayHuntersList() {
     const huntersListElement = document.getElementById('huntersList');
     if (!huntersListElement) return;
@@ -294,7 +278,7 @@ async function displayHuntersList() {
     try {
         const response = await fetch(JSONBIN_API_URL, {
             headers: {
-                'X-Master-Key': JSONBIN_API_KEY
+                'X-Access-Key': JSONBIN_API_KEY
             }
         });
         
@@ -307,7 +291,6 @@ async function displayHuntersList() {
             return;
         }
         
-        // Display hunters in a nice format
         let html = '<div class="hunters-grid">';
         hunters.forEach(hunter => {
             html += `
@@ -331,7 +314,6 @@ async function displayHuntersList() {
 // UTILITY FUNCTIONS
 // ============================================
 
-// Helper function to prevent XSS attacks
 function escapeHtml(str) {
     if (!str) return '';
     return str
@@ -342,29 +324,27 @@ function escapeHtml(str) {
         .replace(/'/g, '&#39;');
 }
 
-// Function to get total stats
 async function getStats() {
     try {
         const response = await fetch(JSONBIN_API_URL, {
             headers: {
-                'X-Master-Key': JSONBIN_API_KEY
+                'X-Access-Key': JSONBIN_API_KEY
             }
         });
         
         const jsonResponse = await response.json();
         const currentData = jsonResponse.record;
         
-        const totalRats = (currentData.rats || []).length;
-        const totalHunters = (currentData.hunters || []).length;
-        
-        return { totalRats, totalHunters };
+        return {
+            totalRats: (currentData.rats || []).length,
+            totalHunters: (currentData.hunters || []).length
+        };
     } catch (error) {
         console.error("Error getting stats:", error);
         return { totalRats: 0, totalHunters: 0 };
     }
 }
 
-// Optional: Update stats display if you have elements for them
 async function updateStatsDisplay() {
     const stats = await getStats();
     const ratsCountElement = document.getElementById('ratsCount');
@@ -373,24 +353,3 @@ async function updateStatsDisplay() {
     if (ratsCountElement) ratsCountElement.textContent = stats.totalRats;
     if (huntersCountElement) huntersCountElement.textContent = stats.totalHunters;
 }
-
-// ============================================
-// ADD THIS TO YOUR HTML
-// ============================================
-/*
-Make sure your HTML has these elements:
-
-<!-- Submit Rat Form -->
-<input type="text" id="ratName" placeholder="Rat's name">
-<textarea id="ratEvidence" placeholder="Evidence"></textarea>
-<button onclick="submitRat()">Submit Rat</button>
-
-<!-- Join Crew Form -->
-<input type="text" id="hunterName" placeholder="Your name">
-<input type="text" id="hunterRole" placeholder="Your role">
-<button onclick="joinCrew()">Join the Crew</button>
-
-<!-- Display Areas -->
-<div id="ratsList"></div>
-<div id="huntersList"></div>
-*/
